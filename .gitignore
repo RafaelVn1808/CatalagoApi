@@ -361,3 +361,34 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ========== CatalagoApi / ASP.NET Core ==========
+# Arquivos locais com credenciais (use User Secrets em desenvolvimento)
+appsettings.*.local.json
+*.local.json
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Rider IDE
+.idea/
+*.sln.iml
+
+# Cursor / VS Code
+.cursor/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# macOS
+.DS_Store
+Thumbs.db
+
+# Arquivos de upload temporários
+uploads/
+temp/
+tmp/

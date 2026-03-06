@@ -105,7 +105,7 @@ export default function Estoque() {
   async function executarEmLote(
     ids: number[],
     acao: (id: number) => Promise<void>,
-    sucesso: string,
+    _sucesso: string,
     erro: string
   ) {
     if (ids.length === 0) return
@@ -262,10 +262,10 @@ export default function Estoque() {
             <button type="button" onClick={() => setSelecionados(new Set())} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem', textDecoration: 'underline' }}>Limpar</button>
           </span>
           <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-            <button type="button" className="btn-action btn-action-sm" disabled={processando} onClick={() => executarEmLote(selArr, (id) => produtosApi.atualizarAtivo(id, true), 'Ativados.', 'Falha.')}>
+            <button type="button" className="btn-action btn-action-sm" disabled={processando} onClick={() => executarEmLote(selArr, (id) => produtosApi.atualizarAtivo(id, true).then(() => {}), 'Ativados.', 'Falha.')}>
               <CheckCircle size={14} /> Ativar
             </button>
-            <button type="button" className="btn-action btn-action-sm" disabled={processando} onClick={() => executarEmLote(selArr, (id) => produtosApi.atualizarAtivo(id, false), 'Inativados.', 'Falha.')}>
+            <button type="button" className="btn-action btn-action-sm" disabled={processando} onClick={() => executarEmLote(selArr, (id) => produtosApi.atualizarAtivo(id, false).then(() => {}), 'Inativados.', 'Falha.')}>
               <XCircle size={14} /> Inativar
             </button>
             <button type="button" className="btn-action btn-action-sm" disabled={processando} onClick={() => executarEmLote(selArr, (id) => produtosApi.atualizarEstoque(id, [{ lojaId: 1, disponivel: true }]).then(() => {}), 'Disponíveis.', 'Falha.')}>
@@ -336,7 +336,7 @@ export default function Estoque() {
                       <td style={{ padding: '0.6rem 0.75rem' }}>
                         <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                           <Link to={`/produtos/${item.id}/editar`} className="btn-action" title="Editar"><Pencil size={15} /></Link>
-                          <button type="button" className="btn-action" title={item.ativo ? 'Inativar' : 'Ativar'} disabled={processando} onClick={() => executarEmLote([item.id], (id) => produtosApi.atualizarAtivo(id, !item.ativo), 'Atualizado.', 'Falha.')}>
+                          <button type="button" className="btn-action" title={item.ativo ? 'Inativar' : 'Ativar'} disabled={processando} onClick={() => executarEmLote([item.id], (id) => produtosApi.atualizarAtivo(id, !item.ativo).then(() => {}), 'Atualizado.', 'Falha.')}>
                             <Power size={15} />
                           </button>
                           <button type="button" className="btn-action" title={disp ? 'Marcar indisponível' : 'Marcar disponível'} disabled={processando} onClick={() => executarEmLote([item.id], (id) => produtosApi.atualizarEstoque(id, [{ lojaId: 1, disponivel: !disp }]).then(() => {}), 'Atualizado.', 'Falha.')}>

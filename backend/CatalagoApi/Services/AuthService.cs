@@ -134,6 +134,8 @@ public class AuthService
 
     private string GerarAccessToken(Usuario usuario)
     {
+        if (string.IsNullOrEmpty(_jwtSettings.Key))
+            throw new InvalidOperationException("JWT Key não configurado. Defina Jwt__Key nas variáveis de ambiente (ex.: no Render).");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

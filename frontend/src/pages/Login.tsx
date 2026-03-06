@@ -65,9 +65,6 @@ export default function Login() {
             {submitting ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
-        <p style={{ marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Desenvolvimento: admin@catalago.com / Admin@123
-        </p>
       </div>
     </div>
   )

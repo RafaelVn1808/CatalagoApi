@@ -15,7 +15,6 @@ export default function Layout() {
   const [menuAberto, setMenuAberto] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const isProdutos = location.pathname === '/produtos'
   const buscaFromUrl = new URLSearchParams(location.search).get('busca') ?? ''
   const [buscaInput, setBuscaInput] = useState(buscaFromUrl)
 

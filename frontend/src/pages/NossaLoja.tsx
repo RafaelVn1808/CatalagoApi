@@ -41,21 +41,21 @@ export default function NossaLoja() {
 
             {loja.endereco && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <MapPin size={20} style={{ color: '#b91c1c', flexShrink: 0, marginTop: 2 }} />
+                <MapPin size={20} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
                 <span>{loja.endereco}</span>
               </div>
             )}
 
             {loja.horario && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <Clock size={20} style={{ color: '#b91c1c', flexShrink: 0, marginTop: 2 }} />
+                <Clock size={20} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
                 <span>{loja.horario}</span>
               </div>
             )}
 
             {loja.telefone && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Phone size={20} style={{ color: '#b91c1c', flexShrink: 0 }} />
+                <Phone size={20} style={{ color: 'var(--primary)', flexShrink: 0 }} />
                 <a href={`tel:${loja.telefone}`} style={{ color: 'var(--text)' }}>
                   {loja.telefone}
                 </a>

@@ -35,7 +35,8 @@ export default function Login() {
   }
 
   return (
-    <div className="container" style={{ maxWidth: '400px', marginTop: '3rem' }}>
+    <div className="app" style={{ padding: '2rem 0' }}>
+      <div className="container" style={{ maxWidth: '400px' }}>
       <Link
         to="/produtos"
         className="login-back"
@@ -83,6 +84,7 @@ export default function Login() {
           </button>
         </form>
       </div>
+    </div>
     </div>
   )
 }

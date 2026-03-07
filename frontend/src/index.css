@@ -1,7 +1,7 @@
 :root {
-  /* Tema cinza e vermelho (estilo Kalunga) */
-  --bg: #f3f4f6;
-  --surface: #ffffff;
+  /* Tema moderno: branco acinzentado, cinza e vermelho no conteúdo */
+  --bg: #e5e7eb;
+  --surface: #f9fafb;
   --border: #e5e7eb;
   --border-light: #f3f4f6;
   --text: #1f2937;
@@ -15,6 +15,7 @@
   /* Barra utility e nav (cinza escuro) */
   --header-utility-bg: #374151;
   --nav-bar-bg: #374151;
+  --nav-link-active: #ffffff;
   font-family: 'DM Sans', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;

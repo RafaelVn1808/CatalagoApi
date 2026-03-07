@@ -238,24 +238,15 @@ export default function Produtos() {
           </aside>
 
           <div className="produtos-area">
-            {/* Mobile: barra de busca rápida + botão filtros */}
-            <div className="mobile-toolbar">
-              <div style={{ position: 'relative', flex: 1 }}>
-                <Search size={16} className="filtro-search-icon" />
-                <input
-                  type="text"
-                  placeholder="Buscar produtos..."
-                  value={busca}
-                  onChange={(e) => setFilter('busca', e.target.value)}
-                  className="filtro-input filtro-input-search"
-                />
-              </div>
+            {/* Mobile: apenas botão de filtros (busca fica no header) */}
+            <div className="mobile-filtro-row">
               <button
                 type="button"
                 className="mobile-filtro-btn"
                 onClick={() => setFiltrosAbertos(true)}
               >
                 <Filter size={18} />
+                Filtros
                 {filtrosAtivos > 0 && <span className="filtro-badge">{filtrosAtivos}</span>}
               </button>
             </div>
@@ -437,16 +428,16 @@ export default function Produtos() {
         }
         .btn-sm-mobile { font-size: 0.8rem; padding: 8px 12px; }
 
-        /* ===== Mobile toolbar (busca + filtro) ===== */
-        .mobile-toolbar {
-          display: flex; gap: 8px; align-items: center;
-          margin-bottom: 12px; padding: 0;
+        /* ===== Mobile: linha do botão Filtros ===== */
+        .mobile-filtro-row {
+          display: flex; margin-bottom: 12px;
         }
         .mobile-filtro-btn {
-          position: relative; display: flex; align-items: center; justify-content: center;
-          width: 42px; height: 42px; flex-shrink: 0;
+          position: relative; display: inline-flex; align-items: center; gap: 6px;
+          padding: 10px 14px; height: 42px;
           border: 1px solid var(--border); border-radius: 8px;
-          background: var(--surface); color: var(--text-muted); cursor: pointer;
+          background: var(--surface); color: var(--text); font-weight: 500;
+          cursor: pointer; font-size: 0.9rem;
         }
         .filtro-badge {
           position: absolute; top: -4px; right: -4px;
@@ -580,7 +571,7 @@ export default function Produtos() {
           .sidebar-filtros-inner {
             position: sticky; top: 100px; padding: 20px 16px;
           }
-          .mobile-toolbar { display: none; }
+          .mobile-filtro-row { display: none; }
           .produtos-area { flex: 1; padding: 24px 28px 28px; }
           .produtos-area-titulo { font-size: 1.4rem; }
           .produtos-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }

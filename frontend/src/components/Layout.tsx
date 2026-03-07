@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Outlet, NavLink, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Menu,
@@ -7,13 +7,33 @@ import {
   MapPin,
   Clock,
   Phone,
+  Search,
 } from 'lucide-react'
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const [menuAberto, setMenuAberto] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const isProdutos = location.pathname === '/produtos'
+  const buscaFromUrl = new URLSearchParams(location.search).get('busca') ?? ''
+  const [buscaInput, setBuscaInput] = useState(buscaFromUrl)
+
+  useEffect(() => {
+    setBuscaInput(buscaFromUrl)
+  }, [buscaFromUrl])
 
   const fecharMenu = () => setMenuAberto(false)
+
+  function handleBuscaSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const valor = (e.currentTarget.querySelector('input')?.value ?? '').trim()
+    const params = new URLSearchParams(location.search)
+    if (valor) params.set('busca', valor)
+    else params.delete('busca')
+    params.delete('pagina')
+    navigate(`/produtos?${params.toString()}`, { replace: true })
+  }
 
   const navLinks = (
     <>
@@ -56,7 +76,7 @@ export default function Layout() {
                 <button type="button" className="layout-utility-btn" onClick={logout}>Sair</button>
               </>
             ) : (
-              <Link to="/login" className="layout-utility-admin">Admin</Link>
+              <Link to="/login" className="layout-utility-link">Admin</Link>
             )}
           </div>
         </div>
@@ -68,6 +88,21 @@ export default function Layout() {
             <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
               <img src="/logo.png" alt="Grupo Bompreço" className="layout-logo" />
             </Link>
+
+            <form className="layout-search-form" onSubmit={handleBuscaSubmit} role="search">
+              <input
+                type="search"
+                name="q"
+                className="layout-search-input"
+                placeholder="Digite aqui o que você procura"
+                value={buscaInput}
+                onChange={(e) => setBuscaInput(e.target.value)}
+                aria-label="Buscar produtos"
+              />
+              <button type="submit" className="layout-search-btn" aria-label="Buscar">
+                <Search size={18} />
+              </button>
+            </form>
 
             <button type="button" className="nav-mobile-toggle" aria-label="Menu" onClick={() => setMenuAberto(!menuAberto)}>
               {menuAberto ? <X size={22} /> : <Menu size={22} />}
@@ -109,15 +144,15 @@ export default function Layout() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <h4 className="footer-title">Nossa Loja</h4>
               <div className="footer-info-row">
-                <MapPin size={16} style={{ color: '#b91c1c', flexShrink: 0 }} />
+                <MapPin size={16} className="footer-icon" />
                 <span>Rua Silas Pinheiro, 18 - Centro - Anajás - PA</span>
               </div>
               <div className="footer-info-row">
-                <Clock size={16} style={{ color: '#b91c1c', flexShrink: 0 }} />
+                <Clock size={16} className="footer-icon" />
                 <span>Seg-Sex: 08-12h / 14:30-18:30 | Sáb: 08-12h / 15-17h</span>
               </div>
               <div className="footer-info-row">
-                <Phone size={16} style={{ color: '#b91c1c', flexShrink: 0 }} />
+                <Phone size={16} className="footer-icon" />
                 <span>(91) 98403-2611</span>
               </div>
             </div>
@@ -165,12 +200,8 @@ export default function Layout() {
           cursor: pointer; font-size: inherit; padding: 0;
         }
         .layout-utility-btn:hover { color: white; text-decoration: underline; }
-        .layout-utility-admin {
-          color: var(--primary); font-weight: 600; text-decoration: none;
-        }
-        .layout-utility-admin:hover { color: #fca5a5; text-decoration: underline; }
 
-        /* ===== Header principal (branco) ===== */
+        /* ===== Header principal (superfície acinzentada + busca) ===== */
         .layout-header {
           position: sticky; top: 0; z-index: 50;
           background: var(--surface);
@@ -178,10 +209,30 @@ export default function Layout() {
           box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
         .layout-header-inner {
-          display: flex; justify-content: space-between; align-items: center;
+          display: flex; align-items: center; gap: 12px;
           height: 56px;
         }
-        .layout-logo { height: 40px; width: auto; object-fit: contain; display: block; }
+        .layout-logo { height: 40px; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
+        .layout-search-form {
+          flex: 1; min-width: 0; max-width: 420px; margin: 0 8px;
+          position: relative;
+        }
+        .layout-search-input {
+          width: 100%; padding: 10px 44px 10px 14px;
+          border: 1px solid var(--border); border-radius: 10px;
+          background: var(--surface); color: var(--text);
+          font-size: 0.9rem; outline: none;
+        }
+        .layout-search-input::placeholder { color: var(--text-muted); }
+        .layout-search-input:focus { border-color: var(--primary); }
+        .layout-search-btn {
+          position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+          width: 36px; height: 36px; border: none; border-radius: 8px;
+          background: var(--primary); color: white;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+        }
+        .layout-search-btn:hover { background: var(--primary-hover); }
         .layout-nav-link {
           color: var(--text-muted); text-decoration: none;
           font-size: 0.875rem; font-weight: 500;
@@ -203,7 +254,7 @@ export default function Layout() {
           color: #e5e7eb; padding: 10px 14px;
         }
         .layout-nav-bar .layout-nav-link:hover { color: white; background: rgba(255,255,255,0.08); }
-        .layout-nav-bar .layout-nav-link.active { color: var(--primary); font-weight: 600; }
+        .layout-nav-bar .layout-nav-link.active { color: var(--nav-link-active); font-weight: 600; }
 
         /* Mobile toggle */
         .nav-mobile-toggle {
@@ -244,15 +295,21 @@ export default function Layout() {
         .footer-info-row {
           display: flex; align-items: flex-start; gap: 8px; font-size: 0.8rem;
         }
+        .footer-icon { color: var(--primary); flex-shrink: 0; }
         .footer-copy {
           border-top: 1px solid #1e293b; margin-top: 24px; padding-top: 16px;
           text-align: center; font-size: 0.75rem; color: #64748b;
         }
 
+        @media (max-width: 767px) {
+          .layout-search-form { max-width: 160px; }
+          .layout-search-input { padding: 8px 36px 8px 10px; font-size: 0.85rem; }
+        }
         /* ===== Desktop (>=768px) ===== */
         @media (min-width: 768px) {
           .layout-header-inner { height: 72px; }
           .layout-logo { height: 52px; }
+          .layout-search-form { margin: 0 16px; }
           .nav-mobile-toggle { display: none !important; }
           .layout-nav-bar { display: block !important; }
           .footer-grid { grid-template-columns: repeat(3, 1fr); gap: 40px; }

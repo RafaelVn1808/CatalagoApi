@@ -14,8 +14,10 @@ import type { ProdutoListDto } from '@/types/api'
 import type { CategoriaDto } from '@/types/api'
 
 const TAMANHO_PAGINA = 12
+const TAMANHO_POR_SECAO = 12
 
 type OrdenarOpcao = 'preco-asc' | 'preco-desc' | 'nome-asc' | 'nome-desc'
+type SecaoCategoria = { categoriaId: number; nome: string; itens: ProdutoListDto[] }
 
 export default function Produtos() {
   const { user } = useAuth()
@@ -64,8 +66,15 @@ export default function Produtos() {
   const [categorias, setCategorias] = useState<CategoriaDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [secoesPorCategoria, setSecoesPorCategoria] = useState<SecaoCategoria[]>([])
+  const [loadingSecoes, setLoadingSecoes] = useState(false)
+  const [errorSecoes, setErrorSecoes] = useState('')
 
   const activeCategory = categoriaId === '' ? 'Todos' : categorias.find((c) => c.id === categoriaId)?.nome ?? 'Todos'
+  const modoPorSecoes = categoriaId === ''
+  const totalExibido = modoPorSecoes
+    ? secoesPorCategoria.reduce((n, s) => n + s.itens.length, 0)
+    : total
 
   useEffect(() => {
     categoriasApi
@@ -75,6 +84,14 @@ export default function Produtos() {
   }, [])
 
   useEffect(() => {
+    if (categoriaId === '') {
+      setItens([])
+      setTotal(0)
+      setTotalPaginas(0)
+      setPrecoMedio(null)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
     const parsePreco = (s: string): number | undefined => {
@@ -98,7 +115,7 @@ export default function Produtos() {
         pagina,
         tamanho: TAMANHO_PAGINA,
         busca: busca || undefined,
-        categoriaId: categoriaId === '' ? undefined : categoriaId,
+        categoriaId,
         precoMin: precoMinNum,
         precoMax: precoMaxNum,
         ordenarPor,
@@ -113,6 +130,49 @@ export default function Produtos() {
       .catch((e) => setError(e.response?.data?.message ?? 'Erro ao carregar produtos.'))
       .finally(() => setLoading(false))
   }, [pagina, busca, categoriaId, precoMin, precoMax, ordenar])
+
+  useEffect(() => {
+    if (categoriaId !== '' || categorias.length === 0) {
+      setSecoesPorCategoria([])
+      return
+    }
+    setLoadingSecoes(true)
+    setErrorSecoes('')
+    const parsePreco = (s: string): number | undefined => {
+      if (s.trim() === '') return undefined
+      const n = Number(s.replace(',', '.'))
+      return Number.isFinite(n) ? n : undefined
+    }
+    const precoMinNum = parsePreco(precoMin)
+    const precoMaxNum = parsePreco(precoMax)
+    const [ordenarPor, ordenarDirecao] =
+      ordenar === 'preco-asc'
+        ? ['Preco', 'asc']
+        : ordenar === 'preco-desc'
+          ? ['Preco', 'desc']
+          : ordenar === 'nome-desc'
+            ? ['Nome', 'desc']
+            : ['Nome', 'asc']
+
+    Promise.all(
+      categorias.map((c) =>
+        produtosApi
+          .listar({
+            categoriaId: c.id,
+            tamanho: TAMANHO_POR_SECAO,
+            busca: busca || undefined,
+            precoMin: precoMinNum,
+            precoMax: precoMaxNum,
+            ordenarPor,
+            ordenarDirecao,
+          })
+          .then((r) => ({ categoriaId: c.id, nome: c.nome, itens: r.data.itens }))
+      )
+    )
+      .then((secoes) => setSecoesPorCategoria(secoes.filter((s) => s.itens.length > 0)))
+      .catch(() => setErrorSecoes('Erro ao carregar produtos por categoria.'))
+      .finally(() => setLoadingSecoes(false))
+  }, [categoriaId, categorias, busca, precoMin, precoMax, ordenar])
 
   function getWhatsAppUrl(produto: ProdutoListDto): string | null {
     const comEstoque = produto.lojasDisponiveis.filter((l) => l.disponivel)
@@ -133,6 +193,49 @@ export default function Produtos() {
 
   const temEstoque = (p: ProdutoListDto) => p.lojasDisponiveis.some((l) => l.disponivel)
   const temWhatsApp = (p: ProdutoListDto) => !!getWhatsAppUrl(p)
+
+  function renderProductCard(produto: ProdutoListDto) {
+    const temDisp = temEstoque(produto)
+    const podeReservar = temDisp && temWhatsApp(produto)
+    return (
+      <div key={produto.id} className="produto-card">
+        <Link to={`/produtos/${produto.id}`} className="produto-card-img-link">
+          <div className="produto-card-img">
+            {produto.imagemUrl ? (
+              <img src={produto.imagemUrl} alt={produto.nome} />
+            ) : (
+              <div className="produto-card-sem-img">
+                <Package size={24} />
+              </div>
+            )}
+            <span className={`produto-badge ${temDisp ? 'badge-disponivel' : 'badge-esgotado'}`}>
+              {temDisp ? 'Disponível' : 'Esgotado'}
+            </span>
+          </div>
+        </Link>
+        <div className="produto-card-body">
+          <span className="produto-card-categoria">{produto.categoriaNome}</span>
+          <h3 className="produto-card-nome">
+            <Link to={`/produtos/${produto.id}`}>{produto.nome}</Link>
+          </h3>
+          <div className="produto-card-footer">
+            <div className="produto-card-preco">
+              {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </div>
+            <button
+              type="button"
+              onClick={() => handleReservar(produto)}
+              disabled={!podeReservar}
+              className={`produto-card-reservar ${podeReservar ? 'ativo' : ''}`}
+            >
+              <MessageCircle size={16} />
+              <span className="reservar-text">Reservar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const filtrosContent = (
     <>
@@ -269,7 +372,7 @@ export default function Produtos() {
                   </div>
                   <div className="filtro-drawer-footer">
                     <button type="button" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setFiltrosAbertos(false)}>
-                      Ver {total} produtos
+                      Ver {totalExibido} produtos
                     </button>
                   </div>
                 </div>
@@ -280,7 +383,7 @@ export default function Produtos() {
               <div>
                 <h1 className="produtos-area-titulo">Produtos</h1>
                 <p className="produtos-area-subtitulo">
-                  {activeCategory} <span className="produtos-area-count">({total} itens)</span>
+                  {activeCategory} <span className="produtos-area-count">({totalExibido} itens)</span>
                 </p>
               </div>
               {user && (
@@ -313,81 +416,70 @@ export default function Produtos() {
             </div>
 
             {error && <p className="error-msg">{error}</p>}
-            {loading && <div className="loading">Carregando produtos...</div>}
+            {errorSecoes && <p className="error-msg">{errorSecoes}</p>}
 
-            {!loading && !error && itens.length > 0 && (
+            {/* Modo por seções (sem filtro de categoria) */}
+            {modoPorSecoes && (
               <>
-                <div className="produtos-grid">
-                  {itens.map((produto) => {
-                    const temDisp = temEstoque(produto)
-                    const podeReservar = temDisp && temWhatsApp(produto)
-                    return (
-                      <div key={produto.id} className="produto-card">
-                        <Link to={`/produtos/${produto.id}`} className="produto-card-img-link">
-                          <div className="produto-card-img">
-                            {produto.imagemUrl ? (
-                              <img src={produto.imagemUrl} alt={produto.nome} />
-                            ) : (
-                              <div className="produto-card-sem-img">
-                                <Package size={24} />
-                              </div>
-                            )}
-                            <span className={`produto-badge ${temDisp ? 'badge-disponivel' : 'badge-esgotado'}`}>
-                              {temDisp ? 'Disponível' : 'Esgotado'}
-                            </span>
-                          </div>
-                        </Link>
-                        <div className="produto-card-body">
-                          <span className="produto-card-categoria">{produto.categoriaNome}</span>
-                          <h3 className="produto-card-nome">
-                            <Link to={`/produtos/${produto.id}`}>{produto.nome}</Link>
-                          </h3>
-                          <div className="produto-card-footer">
-                            <div className="produto-card-preco">
-                              {produto.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleReservar(produto)}
-                              disabled={!podeReservar}
-                              className={`produto-card-reservar ${podeReservar ? 'ativo' : ''}`}
-                            >
-                              <MessageCircle size={16} />
-                              <span className="reservar-text">Reservar</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {totalPaginas > 1 && (
-                  <div className="paginacao">
-                    <button type="button" className="btn btn-ghost" disabled={pagina <= 1} onClick={() => setPagina((x) => x - 1)}>
-                      Anterior
-                    </button>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                      {pagina} / {totalPaginas}
-                    </span>
-                    <button type="button" className="btn btn-ghost" disabled={pagina >= totalPaginas} onClick={() => setPagina((x) => x + 1)}>
-                      Próxima
-                    </button>
+                {loadingSecoes && <div className="loading">Carregando produtos por categoria...</div>}
+                {!loadingSecoes && !errorSecoes && secoesPorCategoria.map((secao) => (
+                  <section key={secao.categoriaId} className="produtos-secao">
+                    <h2 className="produtos-secao-titulo">{secao.nome}</h2>
+                    <div className="produtos-grid">
+                      {secao.itens.map((produto) => renderProductCard(produto))}
+                    </div>
+                  </section>
+                ))}
+                {!loadingSecoes && !errorSecoes && secoesPorCategoria.length === 0 && categorias.length > 0 && (
+                  <div className="produtos-vazio">
+                    <div className="produtos-vazio-icon">
+                      <Search size={28} style={{ color: 'var(--text-muted)' }} />
+                    </div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+                      Nenhum produto encontrado
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tente ajustar sua busca ou filtros.</p>
                   </div>
                 )}
               </>
             )}
 
-            {!loading && !error && itens.length === 0 && (
-              <div className="produtos-vazio">
-                <div className="produtos-vazio-icon">
-                  <Search size={28} style={{ color: 'var(--text-muted)' }} />
-                </div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-                  Nenhum produto encontrado
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tente ajustar sua busca ou categoria.</p>
-              </div>
+            {/* Modo listagem única (com filtro de categoria) */}
+            {!modoPorSecoes && (
+              <>
+                {loading && <div className="loading">Carregando produtos...</div>}
+                {!loading && !error && itens.length > 0 && (
+                  <>
+                    <div className="produtos-grid">
+                      {itens.map((produto) => renderProductCard(produto))}
+                    </div>
+                    {totalPaginas > 1 && (
+                      <div className="paginacao">
+                        <button type="button" className="btn btn-ghost" disabled={pagina <= 1} onClick={() => setPagina((x) => x - 1)}>
+                          Anterior
+                        </button>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                          {pagina} / {totalPaginas}
+                        </span>
+                        <button type="button" className="btn btn-ghost" disabled={pagina >= totalPaginas} onClick={() => setPagina((x) => x + 1)}>
+                          Próxima
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+                {!loading && !error && itens.length === 0 && (
+                  <div className="produtos-vazio">
+                    <div className="produtos-vazio-icon">
+                      <Search size={28} style={{ color: 'var(--text-muted)' }} />
+                    </div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+                      Nenhum produto encontrado
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tente ajustar sua busca ou categoria.</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -489,6 +581,19 @@ export default function Produtos() {
         .produtos-categoria-chip.ativo:hover {
           background: var(--primary-hover);
           color: white;
+        }
+
+        /* ===== Seções por categoria (estilo Kalunga) ===== */
+        .produtos-secao {
+          margin-bottom: 2rem;
+        }
+        .produtos-secao-titulo {
+          font-size: 1.25rem;
+          font-weight: 800;
+          color: var(--text);
+          margin: 0 0 1rem 0;
+          padding-bottom: 0.5rem;
+          border-bottom: 2px solid var(--primary);
         }
 
         /* ===== Mobile: linha do botão Filtros ===== */

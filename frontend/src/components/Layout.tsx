@@ -278,15 +278,15 @@ export default function Layout() {
         }
         .layout-nav-link.active { color: var(--primary); font-weight: 600; }
 
-        /* Barra de categorias (cinza escuro, estilo Kalunga: label + scroll horizontal) */
+        /* Barra de categorias (cinza escuro, moderna: pills + label) */
         .layout-nav-bar {
           display: none;
           background: var(--nav-bar-bg);
         }
         .layout-nav-bar-inner {
           max-width: 1280px; margin: 0 auto; padding: 0 12px;
-          display: flex; align-items: center; flex-wrap: nowrap; gap: 0;
-          min-height: 44px;
+          display: flex; align-items: center; flex-wrap: nowrap; gap: 8px;
+          min-height: 48px;
           overflow-x: auto;
           scrollbar-width: thin;
           -webkit-overflow-scrolling: touch;
@@ -296,17 +296,27 @@ export default function Layout() {
         .layout-nav-categorias-label {
           display: inline-flex; align-items: center; gap: 8px;
           color: #e5e7eb; font-size: 0.875rem; font-weight: 600;
-          padding: 10px 14px 10px 0; margin-right: 4px;
+          padding: 10px 16px;
           flex-shrink: 0;
-          border-right: 1px solid rgba(255,255,255,0.2);
-          padding-right: 14px; margin-right: 8px;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.06);
         }
         .layout-nav-bar .layout-nav-link {
-          color: #e5e7eb; padding: 10px 14px;
+          color: #e5e7eb;
+          padding: 10px 16px;
           flex-shrink: 0;
+          border-radius: 9999px;
+          transition: background 0.15s, color 0.15s;
         }
-        .layout-nav-bar .layout-nav-link:hover { color: white; background: rgba(255,255,255,0.08); }
-        .layout-nav-bar .layout-nav-link.active { color: var(--nav-link-active); font-weight: 600; }
+        .layout-nav-bar .layout-nav-link:hover {
+          color: white;
+          background: rgba(255,255,255,0.1);
+        }
+        .layout-nav-bar .layout-nav-link.active {
+          color: var(--nav-link-active);
+          font-weight: 600;
+          background: rgba(255,255,255,0.18);
+        }
 
         /* Mobile toggle */
         .nav-mobile-toggle {

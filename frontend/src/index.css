@@ -2,6 +2,7 @@
   /* Tema moderno: branco acinzentado, cinza e vermelho no conteúdo */
   --bg: #e5e7eb;
   --surface: #f9fafb;
+  --card: var(--surface);
   --border: #e5e7eb;
   --border-light: #f3f4f6;
   --text: #1f2937;
@@ -16,6 +17,9 @@
   --header-utility-bg: #374151;
   --nav-bar-bg: #374151;
   --nav-link-active: #ffffff;
+  /* Botão de busca no header (accent harmonioso, estilo Kalunga) */
+  --accent-search: #ea580c;
+  --accent-search-hover: #c2410c;
   font-family: 'DM Sans', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;

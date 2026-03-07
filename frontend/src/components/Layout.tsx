@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { categoriasApi } from '@/api/categorias'
+import type { CategoriaDto } from '@/types/api'
 import {
   Menu,
   X,
@@ -10,17 +12,31 @@ import {
   Search,
 } from 'lucide-react'
 
+const MAX_CATEGORIAS_NAV = 10
+
 export default function Layout() {
   const { user, logout } = useAuth()
   const [menuAberto, setMenuAberto] = useState(false)
+  const [categorias, setCategorias] = useState<CategoriaDto[]>([])
   const navigate = useNavigate()
   const location = useLocation()
   const buscaFromUrl = new URLSearchParams(location.search).get('busca') ?? ''
   const [buscaInput, setBuscaInput] = useState(buscaFromUrl)
 
+  const pathname = location.pathname
+  const searchParams = new URLSearchParams(location.search)
+  const categoriaIdFromUrl = pathname === '/produtos' ? searchParams.get('categoriaId') : null
+
   useEffect(() => {
     setBuscaInput(buscaFromUrl)
   }, [buscaFromUrl])
+
+  useEffect(() => {
+    categoriasApi
+      .listar()
+      .then((r) => setCategorias(r.data ?? []))
+      .catch(() => setCategorias([]))
+  }, [])
 
   const fecharMenu = () => setMenuAberto(false)
 
@@ -34,14 +50,31 @@ export default function Layout() {
     navigate(`/produtos?${params.toString()}`, { replace: true })
   }
 
+  const isProdutosActive = pathname === '/produtos' && !categoriaIdFromUrl
+  const categoriasNav = categorias.slice(0, MAX_CATEGORIAS_NAV)
+
   const navLinks = (
     <>
-      <NavLink to="/produtos" className={({ isActive }) => `layout-nav-link ${isActive ? 'active' : ''}`} onClick={fecharMenu}>
+      <Link
+        to="/produtos"
+        className={`layout-nav-link ${isProdutosActive ? 'active' : ''}`}
+        onClick={fecharMenu}
+      >
         Produtos
-      </NavLink>
+      </Link>
       <NavLink to="/nossa-loja" className={({ isActive }) => `layout-nav-link ${isActive ? 'active' : ''}`} onClick={fecharMenu}>
         Nossa loja
       </NavLink>
+      {categoriasNav.map((c) => (
+        <Link
+          key={c.id}
+          to={`/produtos?categoriaId=${c.id}`}
+          className={`layout-nav-link ${pathname === '/produtos' && categoriaIdFromUrl === String(c.id) ? 'active' : ''}`}
+          onClick={fecharMenu}
+        >
+          {c.nome}
+        </Link>
+      ))}
       {user && (
         <>
           <NavLink to="/categorias" className={({ isActive }) => `layout-nav-link ${isActive ? 'active' : ''}`} onClick={fecharMenu}>
@@ -221,17 +254,22 @@ export default function Layout() {
           border: 1px solid var(--border); border-radius: 10px;
           background: var(--surface); color: var(--text);
           font-size: 0.9rem; outline: none;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .layout-search-input::placeholder { color: var(--text-muted); }
-        .layout-search-input:focus { border-color: var(--primary); }
+        .layout-search-input:focus {
+          border-color: var(--accent-search);
+          box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
+        }
         .layout-search-btn {
           position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
           width: 36px; height: 36px; border: none; border-radius: 8px;
-          background: var(--primary); color: white;
+          background: var(--accent-search); color: white;
           display: flex; align-items: center; justify-content: center;
           cursor: pointer;
+          transition: background 0.2s ease;
         }
-        .layout-search-btn:hover { background: var(--primary-hover); }
+        .layout-search-btn:hover { background: var(--accent-search-hover); }
         .layout-nav-link {
           color: var(--text-muted); text-decoration: none;
           font-size: 0.875rem; font-weight: 500;
@@ -246,7 +284,7 @@ export default function Layout() {
         }
         .layout-nav-bar-inner {
           max-width: 1280px; margin: 0 auto; padding: 0 12px;
-          display: flex; align-items: center; gap: 4px;
+          display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
           min-height: 44px;
         }
         .layout-nav-bar .layout-nav-link {
@@ -308,7 +346,7 @@ export default function Layout() {
         @media (min-width: 768px) {
           .layout-header-inner { height: 72px; }
           .layout-logo { height: 52px; }
-          .layout-search-form { margin: 0 16px; }
+          .layout-search-form { margin: 0 16px; max-width: 480px; }
           .nav-mobile-toggle { display: none !important; }
           .layout-nav-bar { display: block !important; }
           .footer-grid { grid-template-columns: repeat(3, 1fr); gap: 40px; }

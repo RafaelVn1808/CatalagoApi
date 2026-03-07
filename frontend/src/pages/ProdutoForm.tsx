@@ -229,7 +229,7 @@ export default function ProdutoForm() {
                 border: '1px solid var(--border)',
                 borderRadius: '10px',
                 cursor: 'pointer',
-                background: 'var(--card)',
+                background: 'var(--surface)',
               }}
             >
               <div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate, Navigate, Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Login() {
@@ -35,6 +36,22 @@ export default function Login() {
 
   return (
     <div className="container" style={{ maxWidth: '400px', marginTop: '3rem' }}>
+      <Link
+        to="/produtos"
+        className="login-back"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          color: 'var(--text-muted)',
+          textDecoration: 'none',
+          fontSize: '0.9rem',
+          marginBottom: '1rem',
+        }}
+      >
+        <ArrowLeft size={18} />
+        Voltar ao catálogo
+      </Link>
       <div className="card">
         <h1 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Entrar</h1>
         <form onSubmit={handleSubmit}>

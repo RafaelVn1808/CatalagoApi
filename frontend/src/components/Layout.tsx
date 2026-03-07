@@ -41,6 +41,27 @@ export default function Layout() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+      {/* Barra utility (estilo Kalunga): Nossas Lojas, Atendimento | Admin/Sair */}
+      <div className="layout-utility">
+        <div className="container layout-utility-inner">
+          <div className="layout-utility-left">
+            <Link to="/nossa-loja" className="layout-utility-link">Nossas Lojas</Link>
+            <span className="layout-utility-sep">|</span>
+            <span className="layout-utility-text">Atendimento</span>
+          </div>
+          <div className="layout-utility-right">
+            {user ? (
+              <>
+                <span className="layout-utility-user">{user.nome}</span>
+                <button type="button" className="layout-utility-btn" onClick={logout}>Sair</button>
+              </>
+            ) : (
+              <Link to="/login" className="layout-utility-admin">Admin</Link>
+            )}
+          </div>
+        </div>
+      </div>
+
       <header className="layout-header">
         <div className="container" style={{ maxWidth: 1280, padding: '0 12px' }}>
           <div className="layout-header-inner">
@@ -48,23 +69,15 @@ export default function Layout() {
               <img src="/logo.png" alt="Grupo Bompreço" className="layout-logo" />
             </Link>
 
-            <nav className="nav-desktop">{navLinks}</nav>
-
-            <div className="layout-header-actions">
-              {user ? (
-                <>
-                  <span className="layout-user-info">{user.nome}</span>
-                  <button type="button" className="btn btn-ghost" onClick={logout}>Sair</button>
-                </>
-              ) : (
-                <Link to="/login" className="btn btn-primary btn-sm-header">Admin</Link>
-              )}
-            </div>
-
             <button type="button" className="nav-mobile-toggle" aria-label="Menu" onClick={() => setMenuAberto(!menuAberto)}>
               {menuAberto ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
+        </div>
+
+        {/* Barra de categorias (nav em cinza escuro) - desktop */}
+        <div className="layout-nav-bar">
+          <div className="container layout-nav-bar-inner">{navLinks}</div>
         </div>
 
         {/* Mobile menu dropdown */}
@@ -72,19 +85,6 @@ export default function Layout() {
           <div className="mobile-menu-overlay" onClick={fecharMenu}>
             <nav className="mobile-menu" onClick={(e) => e.stopPropagation()}>
               {navLinks}
-              <div className="mobile-menu-divider" />
-              {user ? (
-                <>
-                  <span className="mobile-menu-user">{user.nome} ({user.email})</span>
-                  <button type="button" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { logout(); fecharMenu() }}>
-                    Sair
-                  </button>
-                </>
-              ) : (
-                <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={fecharMenu}>
-                  Admin
-                </Link>
-              )}
             </nav>
           </div>
         )}
@@ -142,7 +142,35 @@ export default function Layout() {
       </footer>
 
       <style>{`
-        /* ===== Header ===== */
+        /* ===== Barra utility (topo, cinza escuro) ===== */
+        .layout-utility {
+          background: var(--header-utility-bg);
+          color: #e5e7eb;
+          font-size: 0.8rem;
+        }
+        .layout-utility-inner {
+          max-width: 1280px; margin: 0 auto; padding: 0 12px;
+          display: flex; justify-content: space-between; align-items: center;
+          height: 36px;
+        }
+        .layout-utility-left { display: flex; align-items: center; gap: 10px; }
+        .layout-utility-link { color: #e5e7eb; text-decoration: none; }
+        .layout-utility-link:hover { color: white; text-decoration: underline; }
+        .layout-utility-sep { color: #9ca3af; }
+        .layout-utility-text { color: #d1d5db; }
+        .layout-utility-right { display: flex; align-items: center; gap: 12px; }
+        .layout-utility-user { color: #d1d5db; }
+        .layout-utility-btn {
+          background: transparent; border: none; color: #e5e7eb;
+          cursor: pointer; font-size: inherit; padding: 0;
+        }
+        .layout-utility-btn:hover { color: white; text-decoration: underline; }
+        .layout-utility-admin {
+          color: var(--primary); font-weight: 600; text-decoration: none;
+        }
+        .layout-utility-admin:hover { color: #fca5a5; text-decoration: underline; }
+
+        /* ===== Header principal (branco) ===== */
         .layout-header {
           position: sticky; top: 0; z-index: 50;
           background: var(--surface);
@@ -160,12 +188,22 @@ export default function Layout() {
           padding: 6px 0; transition: color 0.15s;
         }
         .layout-nav-link.active { color: var(--primary); font-weight: 600; }
-        .layout-header-actions { display: none; align-items: center; gap: 10px; }
-        .layout-user-info { color: var(--text-muted); font-size: 0.8rem; }
-        .btn-sm-header { font-size: 0.8rem; padding: 6px 14px; }
 
-        /* Desktop nav */
-        .nav-desktop { display: none; gap: 20px; }
+        /* Barra de categorias (cinza escuro, desktop) */
+        .layout-nav-bar {
+          display: none;
+          background: var(--nav-bar-bg);
+        }
+        .layout-nav-bar-inner {
+          max-width: 1280px; margin: 0 auto; padding: 0 12px;
+          display: flex; align-items: center; gap: 4px;
+          min-height: 44px;
+        }
+        .layout-nav-bar .layout-nav-link {
+          color: #e5e7eb; padding: 10px 14px;
+        }
+        .layout-nav-bar .layout-nav-link:hover { color: white; background: rgba(255,255,255,0.08); }
+        .layout-nav-bar .layout-nav-link.active { color: var(--primary); font-weight: 600; }
 
         /* Mobile toggle */
         .nav-mobile-toggle {
@@ -175,7 +213,7 @@ export default function Layout() {
 
         /* Mobile menu */
         .mobile-menu-overlay {
-          position: fixed; inset: 0; top: 56px; z-index: 49;
+          position: fixed; inset: 0; top: 92px; z-index: 49;
           background: rgba(0,0,0,0.3);
           animation: fadeIn 0.15s ease;
         }
@@ -189,12 +227,6 @@ export default function Layout() {
           padding: 12px 8px; font-size: 0.95rem; border-radius: 8px;
         }
         .mobile-menu .layout-nav-link:hover { background: var(--border-light); }
-        .mobile-menu-divider {
-          height: 1px; background: var(--border); margin: 4px 0;
-        }
-        .mobile-menu-user {
-          font-size: 0.8rem; color: var(--text-muted); padding: 8px;
-        }
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 
         /* ===== Footer ===== */
@@ -221,9 +253,8 @@ export default function Layout() {
         @media (min-width: 768px) {
           .layout-header-inner { height: 72px; }
           .layout-logo { height: 52px; }
-          .nav-desktop { display: flex !important; }
           .nav-mobile-toggle { display: none !important; }
-          .layout-header-actions { display: flex !important; }
+          .layout-nav-bar { display: block !important; }
           .footer-grid { grid-template-columns: repeat(3, 1fr); gap: 40px; }
           .layout-footer { padding: 2.5rem 0; }
           .footer-copy { margin-top: 40px; padding-top: 24px; font-size: 0.8rem; }

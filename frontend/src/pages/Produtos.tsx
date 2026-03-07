@@ -292,13 +292,9 @@ export default function Produtos() {
                   {activeCategory} <span className="produtos-area-count">({total} itens)</span>
                 </p>
               </div>
-              {user ? (
+              {user && (
                 <Link to="/produtos/novo" className="btn btn-primary btn-sm-mobile">
                   Novo produto
-                </Link>
-              ) : (
-                <Link to="/login" className="btn btn-primary btn-sm-mobile">
-                  Admin
                 </Link>
               )}
             </div>

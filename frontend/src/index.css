@@ -1,16 +1,20 @@
 :root {
-  --bg: #f8fafc;
+  /* Tema cinza e vermelho (estilo Kalunga) */
+  --bg: #f3f4f6;
   --surface: #ffffff;
-  --border: #e2e8f0;
-  --border-light: #f1f5f9;
-  --text: #0f172a;
-  --text-muted: #64748b;
+  --border: #e5e7eb;
+  --border-light: #f3f4f6;
+  --text: #1f2937;
+  --text-muted: #6b7280;
   --primary: #b91c1c;
   --primary-hover: #991b1b;
   --primary-light: #fef2f2;
   --danger: #dc2626;
   --success: #16a34a;
   --success-hover: #15803d;
+  /* Barra utility e nav (cinza escuro) */
+  --header-utility-bg: #374151;
+  --nav-bar-bg: #374151;
   font-family: 'DM Sans', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -198,6 +202,10 @@ input, select, textarea {
 .btn-action:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.login-back:hover {
+  color: var(--primary);
 }
 
 /* Mobile-first adjustments */

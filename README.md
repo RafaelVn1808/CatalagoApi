@@ -36,6 +36,15 @@ Sistema de catálogo para lojas físicas, dividido em **backend** (API .NET) e *
    ```
    Crie o bucket `Imagens-produtos` no Supabase Storage (público para leitura).
 
+4. **Desenvolvimento (User Secrets)**: Para não commitar credenciais, use User Secrets:
+   ```bash
+   cd backend/CatalagoApi
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Database=catalago;Username=postgres;Password=SUA_SENHA"
+   dotnet user-secrets set "Jwt:Key" "SUA_CHAVE_JWT_MINIMO_32_CARACTERES"
+   dotnet user-secrets set "Supabase:ServiceKey" "SUA_SUPABASE_SERVICE_KEY"
+   ```
+   Copie `appsettings.Development.example.json` para `appsettings.Development.json` e ajuste o que for necessário (CORS, etc.). Os segredos vêm dos User Secrets.
+
 ## Executar o backend (API)
 
 Na raiz do repositório:

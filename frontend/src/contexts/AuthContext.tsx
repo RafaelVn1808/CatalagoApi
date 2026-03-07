@@ -31,7 +31,7 @@ interface User {
 interface AuthContextValue {
   user: User | null
   loading: boolean
-  login: (email: string, senha: string) => Promise<{ ok: boolean; message?: string }>
+  login: (email: string, senha: string) => Promise<{ ok: boolean; message?: string; deveAlterarSenha?: boolean }>
   logout: () => void
   clearDeveAlterarSenha: () => void
 }
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearAuth])
 
   const login = useCallback(
-    async (email: string, senha: string): Promise<{ ok: boolean; message?: string }> => {
+    async (email: string, senha: string): Promise<{ ok: boolean; message?: string; deveAlterarSenha?: boolean }> => {
       try {
         const { data } = await api.post<TokenResponse>('/api/v1/auth/login', { email, senha })
         localStorage.setItem(STORAGE_KEYS.access, data.accessToken)
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(u))
         setUser(u)
-        return { ok: true }
+        return { ok: true, deveAlterarSenha: u.deveAlterarSenha }
       } catch (err: unknown) {
         const msg =
           (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

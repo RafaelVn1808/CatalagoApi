@@ -61,7 +61,7 @@ export default function ProdutoDetalhe() {
         <div className="detalhe-grid">
           <div>
             {produto.imagemUrl ? (
-              <img src={produto.imagemUrl} alt={produto.nome} style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)' }} />
+              <img src={produto.imagemUrl} alt={produto.nome} loading="lazy" style={{ width: '100%', borderRadius: '8px', border: '1px solid var(--border)' }} />
             ) : (
               <div style={{ aspectRatio: '1', background: 'var(--border-light)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
                 Sem imagem

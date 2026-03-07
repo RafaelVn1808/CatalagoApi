@@ -14,10 +14,8 @@ import type { ProdutoListDto } from '@/types/api'
 import type { CategoriaDto } from '@/types/api'
 
 const TAMANHO_PAGINA = 12
-const TAMANHO_POR_SECAO = 12
 
 type OrdenarOpcao = 'preco-asc' | 'preco-desc' | 'nome-asc' | 'nome-desc'
-type SecaoCategoria = { categoriaId: number; nome: string; itens: ProdutoListDto[] }
 
 export default function Produtos() {
   const { user } = useAuth()
@@ -66,15 +64,9 @@ export default function Produtos() {
   const [categorias, setCategorias] = useState<CategoriaDto[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [secoesPorCategoria, setSecoesPorCategoria] = useState<SecaoCategoria[]>([])
-  const [loadingSecoes, setLoadingSecoes] = useState(false)
-  const [errorSecoes, setErrorSecoes] = useState('')
 
   const activeCategory = categoriaId === '' ? 'Todos' : categorias.find((c) => c.id === categoriaId)?.nome ?? 'Todos'
-  const modoPorSecoes = categoriaId === ''
-  const totalExibido = modoPorSecoes
-    ? secoesPorCategoria.reduce((n, s) => n + s.itens.length, 0)
-    : total
+  const totalExibido = total
 
   useEffect(() => {
     categoriasApi
@@ -84,14 +76,6 @@ export default function Produtos() {
   }, [])
 
   useEffect(() => {
-    if (categoriaId === '') {
-      setItens([])
-      setTotal(0)
-      setTotalPaginas(0)
-      setPrecoMedio(null)
-      setLoading(false)
-      return
-    }
     setLoading(true)
     setError('')
     const parsePreco = (s: string): number | undefined => {
@@ -115,7 +99,7 @@ export default function Produtos() {
         pagina,
         tamanho: TAMANHO_PAGINA,
         busca: busca || undefined,
-        categoriaId,
+        categoriaId: categoriaId === '' ? undefined : categoriaId,
         precoMin: precoMinNum,
         precoMax: precoMaxNum,
         ordenarPor,
@@ -130,52 +114,6 @@ export default function Produtos() {
       .catch((e) => setError(e.response?.data?.message ?? 'Erro ao carregar produtos.'))
       .finally(() => setLoading(false))
   }, [pagina, busca, categoriaId, precoMin, precoMax, ordenar])
-
-  const categoriasList = Array.isArray(categorias) ? categorias : []
-
-  useEffect(() => {
-    if (categoriaId !== '' || categoriasList.length === 0) {
-      setSecoesPorCategoria([])
-      if (categoriaId === '' && categoriasList.length === 0) setLoadingSecoes(false)
-      return
-    }
-    setLoadingSecoes(true)
-    setErrorSecoes('')
-    const parsePreco = (s: string): number | undefined => {
-      if (s.trim() === '') return undefined
-      const n = Number(s.replace(',', '.'))
-      return Number.isFinite(n) ? n : undefined
-    }
-    const precoMinNum = parsePreco(precoMin)
-    const precoMaxNum = parsePreco(precoMax)
-    const [ordenarPor, ordenarDirecao] =
-      ordenar === 'preco-asc'
-        ? ['Preco', 'asc']
-        : ordenar === 'preco-desc'
-          ? ['Preco', 'desc']
-          : ordenar === 'nome-desc'
-            ? ['Nome', 'desc']
-            : ['Nome', 'asc']
-
-    Promise.all(
-      categoriasList.map((c) =>
-        produtosApi
-          .listar({
-            categoriaId: c.id,
-            tamanho: TAMANHO_POR_SECAO,
-            busca: busca || undefined,
-            precoMin: precoMinNum,
-            precoMax: precoMaxNum,
-            ordenarPor,
-            ordenarDirecao,
-          })
-          .then((r) => ({ categoriaId: c.id, nome: c.nome, itens: r.data?.itens ?? [] }))
-      )
-    )
-      .then((secoes) => setSecoesPorCategoria(secoes.filter((s) => s.itens && s.itens.length > 0)))
-      .catch(() => setErrorSecoes('Erro ao carregar produtos por categoria.'))
-      .finally(() => setLoadingSecoes(false))
-  }, [categoriaId, categoriasList, busca, precoMin, precoMax, ordenar])
 
   function getWhatsAppUrl(produto: ProdutoListDto): string | null {
     const comEstoque = produto.lojasDisponiveis.filter((l) => l.disponivel)
@@ -205,7 +143,7 @@ export default function Produtos() {
         <Link to={`/produtos/${produto.id}`} className="produto-card-img-link">
           <div className="produto-card-img">
             {produto.imagemUrl ? (
-              <img src={produto.imagemUrl} alt={produto.nome} />
+              <img src={produto.imagemUrl} alt={produto.nome} loading="lazy" />
             ) : (
               <div className="produto-card-sem-img">
                 <Package size={24} />
@@ -318,13 +256,6 @@ export default function Produtos() {
         </select>
       </div>
 
-      <div className="filtro-info-box">
-        <Package size={18} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
-        <div>
-          <p style={{ fontWeight: 600, color: 'var(--text)', fontSize: '0.8rem' }}>Gestão Local</p>
-          <p style={{ fontSize: '0.75rem' }}>Preços e estoque atualizados diariamente.</p>
-        </div>
-      </div>
     </>
   )
 
@@ -397,57 +328,32 @@ export default function Produtos() {
             </div>
 
             {error && <p className="error-msg">{error}</p>}
-            {errorSecoes && <p className="error-msg">{errorSecoes}</p>}
 
-            {/* Modo por seções (sem filtro de categoria) */}
-            {modoPorSecoes && (
-              <>
-                {categoriasList.length === 0 && <div className="loading">Carregando categorias...</div>}
-                {categoriasList.length > 0 && loadingSecoes && <div className="loading">Carregando produtos por categoria...</div>}
-                {categoriasList.length > 0 && !loadingSecoes && !errorSecoes && secoesPorCategoria.map((secao) => (
-                  <section key={secao.categoriaId} className="produtos-secao">
-                    <h2 className="produtos-secao-titulo">{secao.nome}</h2>
-                    <div className="produtos-grid">
-                      {secao.itens.map((produto) => renderProductCard(produto))}
-                    </div>
-                  </section>
-                ))}
-                {categoriasList.length > 0 && !loadingSecoes && !errorSecoes && secoesPorCategoria.length === 0 && (
-                  <div className="produtos-vazio">
-                    <div className="produtos-vazio-icon">
-                      <Search size={28} style={{ color: 'var(--text-muted)' }} />
-                    </div>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
-                      Nenhum produto encontrado
-                    </h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Tente ajustar sua busca ou filtros.</p>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Modo listagem única (com filtro de categoria) */}
-            {!modoPorSecoes && (
-              <>
+            {/* Listagem paginada (Todos ou por categoria) */}
+            <>
                 {loading && <div className="loading">Carregando produtos...</div>}
                 {!loading && !error && itens.length > 0 && (
                   <>
                     <div className="produtos-grid">
                       {itens.map((produto) => renderProductCard(produto))}
                     </div>
-                    {totalPaginas > 1 && (
-                      <div className="paginacao">
-                        <button type="button" className="btn btn-ghost" disabled={pagina <= 1} onClick={() => setPagina((x) => x - 1)}>
-                          Anterior
-                        </button>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                          {pagina} / {totalPaginas}
-                        </span>
-                        <button type="button" className="btn btn-ghost" disabled={pagina >= totalPaginas} onClick={() => setPagina((x) => x + 1)}>
-                          Próxima
-                        </button>
-                      </div>
-                    )}
+                    <div className="paginacao">
+                      <button type="button" className="btn btn-ghost" disabled={pagina <= 1} onClick={() => setPagina(1)} aria-label="Primeira página">
+                        Primeira
+                      </button>
+                      <button type="button" className="btn btn-ghost" disabled={pagina <= 1} onClick={() => setPagina((x) => x - 1)} aria-label="Página anterior">
+                        Anterior
+                      </button>
+                      <span className="paginacao-info" aria-live="polite">
+                        {pagina} / {totalPaginas || 1}
+                      </span>
+                      <button type="button" className="btn btn-ghost" disabled={pagina >= totalPaginas} onClick={() => setPagina((x) => x + 1)} aria-label="Próxima página">
+                        Próxima
+                      </button>
+                      <button type="button" className="btn btn-ghost" disabled={pagina >= totalPaginas} onClick={() => setPagina(totalPaginas)} aria-label="Última página">
+                        Última
+                      </button>
+                    </div>
                   </>
                 )}
                 {!loading && !error && itens.length === 0 && (
@@ -462,26 +368,26 @@ export default function Produtos() {
                   </div>
                 )}
               </>
-            )}
           </div>
         </div>
       </main>
 
       <style>{`
-        /* ===== Filtros compartilhados ===== */
+        /* ===== Filtros compartilhados (menu limpo Kalunga) ===== */
         .filtro-header {
           display: flex; align-items: center; gap: 8px;
-          font-weight: 700; color: var(--text); margin-bottom: 16px;
+          font-weight: 700; color: #333; margin-bottom: 20px;
+          font-size: 14px;
         }
-        .filtro-campo { margin-bottom: 14px; }
+        .filtro-campo { margin-bottom: 18px; }
         .filtro-label {
-          display: block; font-size: 0.8rem; font-weight: 600;
-          color: var(--text); margin-bottom: 6px;
+          display: block; font-size: 14px; font-weight: 700;
+          color: #333; margin-bottom: 8px;
         }
         .filtro-input {
-          width: 100%; padding: 9px 10px;
-          border: 1px solid var(--border); border-radius: 8px;
-          background: var(--surface); color: var(--text); font-size: 0.85rem;
+          width: 100%; padding: 10px 12px;
+          border: 1px solid var(--border); border-radius: 6px;
+          background: var(--surface); color: var(--text); font-size: 14px;
           outline: none;
         }
         .filtro-input:focus { border-color: var(--primary); }
@@ -491,50 +397,45 @@ export default function Produtos() {
           transform: translateY(-50%); color: var(--text-muted); pointer-events: none;
         }
         .filtro-select {
-          width: 100%; padding: 9px 10px;
-          border: 1px solid var(--border); border-radius: 8px;
-          background: var(--surface); color: var(--text); font-size: 0.85rem;
+          width: 100%; padding: 10px 12px;
+          border: 1px solid var(--border); border-radius: 6px;
+          background: var(--surface); color: var(--text); font-size: 14px;
         }
         .filtro-media {
-          padding: 8px 10px; background: var(--border-light);
-          border-radius: 8px; margin-bottom: 14px;
-        }
-        .filtro-info-box {
-          display: flex; gap: 10px; align-items: flex-start;
-          font-size: 0.8rem; color: var(--text-muted);
-          padding-top: 14px; border-top: 1px solid var(--border-light); margin-top: 8px;
+          padding: 10px 12px; background: var(--border-light);
+          border-radius: 6px; margin-bottom: 18px;
         }
 
         /* ===== Página ===== */
         .produtos-page { display: flex; flex-direction: column; min-height: calc(100vh - 80px); }
         .produtos-layout { display: flex; flex: 1; flex-direction: column; }
 
-        /* ===== Desktop sidebar ===== */
+        /* ===== Desktop sidebar (menu limpo) ===== */
         .sidebar-desktop { display: none; }
-        .sidebar-filtros-inner { padding: 20px 16px; }
+        .sidebar-filtros-inner { padding: 24px 20px; font-size: 14px; }
 
         /* ===== Área de produtos ===== */
-        .produtos-area { flex: 1; min-width: 0; padding: 0 12px 16px; }
+        .produtos-area { flex: 1; min-width: 0; padding: 0 16px 24px; }
         .produtos-area-titulo { font-size: 1.15rem; font-weight: 800; color: var(--text); margin: 0; }
-        .produtos-area-subtitulo { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-top: 2px; }
+        .produtos-area-subtitulo { font-size: 14px; font-weight: 600; color: var(--text); margin-top: 4px; }
         .produtos-area-count { color: var(--text-muted); font-weight: 400; font-size: 0.8rem; }
         .produtos-header {
           display: flex; justify-content: space-between; align-items: center;
-          margin-bottom: 16px;
+          margin-bottom: 20px;
         }
-        .btn-sm-mobile { font-size: 0.8rem; padding: 8px 12px; }
+        .btn-sm-mobile { font-size: 14px; padding: 8px 12px; }
 
-        /* ===== Seções por categoria (estilo Kalunga) ===== */
+        /* ===== Seções por categoria ===== */
         .produtos-secao {
-          margin-bottom: 2rem;
+          margin-bottom: 2.5rem;
         }
         .produtos-secao-titulo {
           font-size: 1.25rem;
-          font-weight: 800;
+          font-weight: 600;
           color: var(--text);
           margin: 0 0 1rem 0;
           padding-bottom: 0.5rem;
-          border-bottom: 2px solid var(--primary);
+          border-bottom: 1px solid var(--border);
         }
 
         /* ===== Mobile: linha do botão Filtros ===== */
@@ -544,9 +445,10 @@ export default function Produtos() {
         .mobile-filtro-btn {
           position: relative; display: inline-flex; align-items: center; gap: 6px;
           padding: 10px 14px; height: 42px;
-          border: 1px solid var(--border); border-radius: 8px;
+          border: 1px solid var(--border); border-radius: 6px;
           background: var(--surface); color: var(--text); font-weight: 500;
           cursor: pointer; font-size: 0.9rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .filtro-badge {
           position: absolute; top: -4px; right: -4px;
@@ -564,9 +466,10 @@ export default function Produtos() {
         }
         .filtro-drawer {
           position: absolute; bottom: 0; left: 0; right: 0;
-          background: var(--surface); border-radius: 16px 16px 0 0;
+          background: var(--surface); border-radius: 12px 12px 0 0;
           max-height: 85vh; display: flex; flex-direction: column;
           animation: slideUp 0.25s ease;
+          box-shadow: 0 -1px 3px rgba(0,0,0,0.1);
         }
         .filtro-drawer-header {
           display: flex; justify-content: space-between; align-items: center;
@@ -584,15 +487,19 @@ export default function Produtos() {
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
 
-        /* ===== Cards de produto ===== */
+        /* ===== Cards de produto (branco, sombra leve) ===== */
         .produtos-grid {
-          display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+          display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
         }
         .produto-card {
-          background: var(--surface); border-radius: 12px;
-          border: 1px solid var(--border); overflow: hidden;
+          background: #FFFFFF; border-radius: 8px;
+          border: 1px solid #eeeeee; overflow: hidden;
           display: flex; flex-direction: column;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          transition: box-shadow 0.2s ease;
+        }
+        .produto-card:hover {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         }
         .produto-card-img-link { text-decoration: none; }
         .produto-card-img {
@@ -640,21 +547,29 @@ export default function Produtos() {
           background: var(--border-light); color: var(--text-muted);
         }
         .produto-card-reservar.ativo {
-          background: #16a34a; color: white; cursor: pointer;
+          background: var(--primary); color: white; cursor: pointer;
         }
         .reservar-text { display: none; }
 
         /* ===== Paginação ===== */
         .paginacao {
-          display: flex; gap: 8px; margin-top: 16px;
+          display: flex; gap: 8px; margin-top: 20px;
           justify-content: center; align-items: center;
+          flex-wrap: wrap;
+        }
+        .paginacao-info {
+          color: var(--text-muted);
+          font-size: 0.875rem;
+          min-width: 4ch;
+          text-align: center;
         }
 
         /* ===== Vazio ===== */
         .produtos-vazio {
-          text-align: center; padding: 48px 16px;
-          background: var(--surface); border-radius: 16px;
-          border: 1px dashed var(--border);
+          text-align: center; padding: 48px 24px;
+          background: #FFFFFF; border-radius: 6px;
+          border: 1px solid var(--border);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .produtos-vazio-icon {
           display: inline-flex; padding: 12px;
@@ -663,10 +578,10 @@ export default function Produtos() {
 
         /* ===== Tablet (>=600px): 3 colunas ===== */
         @media (min-width: 600px) {
-          .produtos-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+          .produtos-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
           .produto-card-preco { font-size: 1.05rem; }
           .reservar-text { display: inline; }
-          .produtos-area { padding: 0 20px 20px; }
+          .produtos-area { padding: 0 20px 24px; }
         }
 
         /* ===== Desktop (>=768px) ===== */
@@ -675,13 +590,13 @@ export default function Produtos() {
           .sidebar-desktop {
             display: block; width: 250px; max-width: 250px; flex-shrink: 0;
             min-height: calc(100vh - 80px);
-            border-right: 1px solid var(--border); background: var(--surface);
+            border-right: 1px solid var(--border); background: #FFFFFF;
           }
           .sidebar-filtros-inner {
-            position: sticky; top: 100px; padding: 20px 16px;
+            position: sticky; top: 100px; padding: 24px 20px;
           }
           .mobile-filtro-row { display: none; }
-          .produtos-area { flex: 1; padding: 24px 28px 28px; }
+          .produtos-area { flex: 1; padding: 28px 32px 32px; }
           .produtos-area-titulo { font-size: 1.4rem; }
           .produtos-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
           .produto-card-img { aspect-ratio: 4/3; }

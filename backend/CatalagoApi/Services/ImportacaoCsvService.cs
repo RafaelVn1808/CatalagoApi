@@ -300,19 +300,32 @@ public class ImportacaoCsvService
 
         var categoriasPorNome = await _db.Categorias.ToDictionaryAsync(c => c.Nome.Trim().ToUpperInvariant(), c => c, StringComparer.OrdinalIgnoreCase);
         var todasLojas = await _db.Lojas.OrderBy(l => l.Id).ToListAsync(ct);
-        // Agrupa por código para lidar com possíveis duplicidades já existentes no banco
-        var produtosLista = await _db.Produtos.Include(p => p.ProdutosLoja).ToListAsync(ct);
+        // Agrupa por código em batches para evitar carregar todos os produtos em memória
         var produtosPorCodigo = new Dictionary<string, List<Produto>>(StringComparer.OrdinalIgnoreCase);
-        foreach (var p in produtosLista)
+        const int batchSize = 500;
+        var skip = 0;
+        while (true)
         {
-            var key = (p.Codigo ?? "").Trim().ToUpperInvariant();
-            if (string.IsNullOrEmpty(key)) continue;
-            if (!produtosPorCodigo.TryGetValue(key, out var lista))
+            var batch = await _db.Produtos
+                .Include(p => p.ProdutosLoja)
+                .OrderBy(p => p.Id)
+                .Skip(skip)
+                .Take(batchSize)
+                .ToListAsync(ct);
+            if (batch.Count == 0) break;
+            foreach (var p in batch)
             {
-                lista = new List<Produto>();
-                produtosPorCodigo[key] = lista;
+                var key = (p.Codigo ?? "").Trim().ToUpperInvariant();
+                if (string.IsNullOrEmpty(key)) continue;
+                if (!produtosPorCodigo.TryGetValue(key, out var lista))
+                {
+                    lista = new List<Produto>();
+                    produtosPorCodigo[key] = lista;
+                }
+                lista.Add(p);
             }
-            lista.Add(p);
+            skip += batchSize;
+            if (batch.Count < batchSize) break;
         }
 
         for (var i = 1; i < rows.Count; i++)

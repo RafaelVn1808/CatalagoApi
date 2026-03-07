@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using CatalagoApi.Data;
 using CatalagoApi.HealthChecks;
@@ -54,9 +55,11 @@ builder.Services.AddScoped<ImportacaoCsvService>();
 builder.Services.AddScoped<UploadService>();
 builder.Services.AddHttpClient<SupabaseStorageService>();
 
-// CORS (inclui origem do Swagger para evitar "Failed to fetch")
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:3000", "http://localhost:5000", "http://localhost:5173", "http://localhost:5291", "https://localhost:7171"];
+// CORS: em Development usa localhost; em Production exige configuração explícita (Cors:AllowedOrigins)
+var defaultOrigins = builder.Environment.IsDevelopment()
+    ? new[] { "http://localhost:3000", "http://localhost:5000", "http://localhost:5173", "http://localhost:5291", "https://localhost:7171" }
+    : Array.Empty<string>();
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? defaultOrigins;
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -145,7 +148,7 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogInformation("Aplicando {Count} migration(s) pendentes...", pending.Count());
         await db.Database.MigrateAsync();
     }
-    await DbSeeder.SeedAsync(db);
+    await DbSeeder.SeedAsync(db, app.Environment.IsDevelopment());
 }
 
 // Em desenvolvimento, evita redirecionar HTTP→HTTPS (evita "Failed to fetch" no Swagger)

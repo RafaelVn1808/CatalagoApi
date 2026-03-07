@@ -53,14 +53,13 @@ public class CategoriaService
     /// <returns>Sucesso; Erro = "NotFound" ou "CategoriaComProdutos".</returns>
     public async Task<(bool Sucesso, string? Erro)> ExcluirAsync(int id, CancellationToken ct = default)
     {
-        var categoria = await _db.Categorias
-            .Include(c => c.Produtos)
-            .FirstOrDefaultAsync(c => c.Id == id, ct);
+        var temProdutos = await _db.Produtos.AnyAsync(p => p.CategoriaId == id, ct);
+        if (temProdutos)
+            return (false, "CategoriaComProdutos");
 
+        var categoria = await _db.Categorias.FindAsync([id], ct);
         if (categoria == null)
             return (false, "NotFound");
-        if (categoria.Produtos.Count > 0)
-            return (false, "CategoriaComProdutos");
 
         _db.Categorias.Remove(categoria);
         await _db.SaveChangesAsync(ct);

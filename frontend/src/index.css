@@ -1,30 +1,30 @@
 :root {
-  /* Tema moderno: branco acinzentado, cinza e vermelho no conteúdo */
-  --bg: #e5e7eb;
-  --surface: #f9fafb;
-  --card: var(--surface);
-  --border: #e5e7eb;
-  --border-light: #f3f4f6;
-  --text: #1f2937;
-  --text-muted: #6b7280;
-  --primary: #b91c1c;
-  --primary-hover: #991b1b;
-  --primary-light: #fef2f2;
+  /* Cinza moderno e vermelho */
+  --bg: #F8F9FA;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --border: #DEE2E6;
+  --border-light: #E9ECEF;
+  --text: #212529;
+  --text-muted: #6c757d;
+  --primary: #D32F2F;
+  --primary-hover: #b71c1c;
+  --primary-light: #ffebee;
   --danger: #dc2626;
   --success: #16a34a;
   --success-hover: #15803d;
-  /* Barra utility e nav (cinza escuro) */
-  --header-utility-bg: #374151;
-  --nav-bar-bg: #374151;
+  --header-utility-bg: #2d3436;
+  --nav-bar-bg: #2d3436;
+  --card-border: #eeeeee;
   --nav-link-active: #ffffff;
-  /* Botão de busca no header (accent harmonioso, estilo Kalunga) */
-  --accent-search: #ea580c;
-  --accent-search-hover: #c2410c;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  --accent-search: #D32F2F;
+  --accent-search-hover: #b71c1c;
+  font-family: 'Inter', 'Roboto', 'Open Sans', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: var(--text);
   background-color: var(--bg);
+  font-size: 14px;
 }
 
 * {
@@ -134,8 +134,9 @@ input, select, textarea {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 6px;
   padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .grid {

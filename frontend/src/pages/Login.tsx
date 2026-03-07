@@ -19,16 +19,10 @@ export default function Login() {
     e.preventDefault()
     setErro('')
     setSubmitting(true)
-    const { ok, message } = await login(email, senha)
+    const { ok, message, deveAlterarSenha } = await login(email, senha)
     setSubmitting(false)
     if (ok) {
-      const stored = localStorage.getItem('catalago_user')
-      const u = stored ? JSON.parse(stored) : null
-      if (u?.deveAlterarSenha) {
-        navigate('/alterar-senha', { replace: true })
-      } else {
-        navigate('/produtos', { replace: true })
-      }
+      navigate(deveAlterarSenha ? '/alterar-senha' : '/produtos', { replace: true })
     } else {
       setErro(message ?? 'Erro ao fazer login.')
     }

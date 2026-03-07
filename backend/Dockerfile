@@ -12,8 +12,10 @@ RUN dotnet publish -c Release -o /app/publish --no-restore
 
 FROM base AS final
 RUN apt-get update && apt-get install -y --no-install-recommends libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
+RUN adduser --disabled-password --gecos "" appuser
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+USER appuser
 ENTRYPOINT ["dotnet", "CatalagoApi.dll"]

@@ -40,6 +40,8 @@ public class AppDbContext : DbContext
             .HasIndex(p => p.Ativo);
         modelBuilder.Entity<Produto>()
             .HasIndex(p => p.Codigo);
+        modelBuilder.Entity<Produto>()
+            .HasIndex(p => p.Nome);
         modelBuilder.Entity<Usuario>()
             .HasIndex(u => u.Email)
             .IsUnique();

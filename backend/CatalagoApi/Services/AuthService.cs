@@ -25,9 +25,12 @@ public class AuthService
     /// <summary>Login retorna access token + refresh token.</summary>
     public async Task<TokenResponse?> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
+        var emailNorm = (request.Email ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(emailNorm))
+            return null;
         var usuario = await _db.Usuarios
             .Include(u => u.Loja)
-            .FirstOrDefaultAsync(u => u.Email == request.Email, ct);
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == emailNorm, ct);
 
         if (usuario == null)
             return null;

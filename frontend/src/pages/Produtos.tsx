@@ -131,9 +131,12 @@ export default function Produtos() {
       .finally(() => setLoading(false))
   }, [pagina, busca, categoriaId, precoMin, precoMax, ordenar])
 
+  const categoriasList = Array.isArray(categorias) ? categorias : []
+
   useEffect(() => {
-    if (categoriaId !== '' || categorias.length === 0) {
+    if (categoriaId !== '' || categoriasList.length === 0) {
       setSecoesPorCategoria([])
+      if (categoriaId === '' && categoriasList.length === 0) setLoadingSecoes(false)
       return
     }
     setLoadingSecoes(true)
@@ -155,7 +158,7 @@ export default function Produtos() {
             : ['Nome', 'asc']
 
     Promise.all(
-      categorias.map((c) =>
+      categoriasList.map((c) =>
         produtosApi
           .listar({
             categoriaId: c.id,
@@ -166,13 +169,13 @@ export default function Produtos() {
             ordenarPor,
             ordenarDirecao,
           })
-          .then((r) => ({ categoriaId: c.id, nome: c.nome, itens: r.data.itens }))
+          .then((r) => ({ categoriaId: c.id, nome: c.nome, itens: r.data?.itens ?? [] }))
       )
     )
-      .then((secoes) => setSecoesPorCategoria(secoes.filter((s) => s.itens.length > 0)))
+      .then((secoes) => setSecoesPorCategoria(secoes.filter((s) => s.itens && s.itens.length > 0)))
       .catch(() => setErrorSecoes('Erro ao carregar produtos por categoria.'))
       .finally(() => setLoadingSecoes(false))
-  }, [categoriaId, categorias, busca, precoMin, precoMax, ordenar])
+  }, [categoriaId, categoriasList, busca, precoMin, precoMax, ordenar])
 
   function getWhatsAppUrl(produto: ProdutoListDto): string | null {
     const comEstoque = produto.lojasDisponiveis.filter((l) => l.disponivel)
@@ -393,36 +396,15 @@ export default function Produtos() {
               )}
             </div>
 
-            {/* Faixa horizontal de categorias (modelo 2ª imagem) */}
-            <div className="produtos-categorias-strip">
-              <h2 className="produtos-categorias-strip-titulo">Categorias</h2>
-              <div className="produtos-categorias-strip-inner">
-                <Link
-                  to="/produtos"
-                  className={`produtos-categoria-chip ${categoriaId === '' ? 'ativo' : ''}`}
-                >
-                  Todos
-                </Link>
-                {categorias.map((c) => (
-                  <Link
-                    key={c.id}
-                    to={`/produtos?categoriaId=${c.id}`}
-                    className={`produtos-categoria-chip ${categoriaId === c.id ? 'ativo' : ''}`}
-                  >
-                    {c.nome}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
             {error && <p className="error-msg">{error}</p>}
             {errorSecoes && <p className="error-msg">{errorSecoes}</p>}
 
             {/* Modo por seções (sem filtro de categoria) */}
             {modoPorSecoes && (
               <>
-                {loadingSecoes && <div className="loading">Carregando produtos por categoria...</div>}
-                {!loadingSecoes && !errorSecoes && secoesPorCategoria.map((secao) => (
+                {categoriasList.length === 0 && <div className="loading">Carregando categorias...</div>}
+                {categoriasList.length > 0 && loadingSecoes && <div className="loading">Carregando produtos por categoria...</div>}
+                {categoriasList.length > 0 && !loadingSecoes && !errorSecoes && secoesPorCategoria.map((secao) => (
                   <section key={secao.categoriaId} className="produtos-secao">
                     <h2 className="produtos-secao-titulo">{secao.nome}</h2>
                     <div className="produtos-grid">
@@ -430,7 +412,7 @@ export default function Produtos() {
                     </div>
                   </section>
                 ))}
-                {!loadingSecoes && !errorSecoes && secoesPorCategoria.length === 0 && categorias.length > 0 && (
+                {categoriasList.length > 0 && !loadingSecoes && !errorSecoes && secoesPorCategoria.length === 0 && (
                   <div className="produtos-vazio">
                     <div className="produtos-vazio-icon">
                       <Search size={28} style={{ color: 'var(--text-muted)' }} />
@@ -541,47 +523,6 @@ export default function Produtos() {
           margin-bottom: 16px;
         }
         .btn-sm-mobile { font-size: 0.8rem; padding: 8px 12px; }
-
-        /* ===== Faixa horizontal de categorias (modelo 2ª imagem) ===== */
-        .produtos-categorias-strip {
-          margin-bottom: 20px;
-        }
-        .produtos-categorias-strip-titulo {
-          font-size: 0.95rem; font-weight: 700; color: var(--text);
-          margin: 0 0 10px 0;
-        }
-        .produtos-categorias-strip-inner {
-          display: flex; align-items: center; gap: 8px;
-          overflow-x: auto; padding-bottom: 6px;
-          scrollbar-width: thin;
-          -webkit-overflow-scrolling: touch;
-        }
-        .produtos-categorias-strip-inner::-webkit-scrollbar { height: 6px; }
-        .produtos-categorias-strip-inner::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        .produtos-categoria-chip {
-          flex-shrink: 0;
-          padding: 8px 14px;
-          border-radius: 9999px;
-          font-size: 0.85rem; font-weight: 500;
-          text-decoration: none;
-          background: var(--surface);
-          color: var(--text);
-          border: 1px solid var(--border);
-          transition: background 0.15s, color 0.15s, border-color 0.15s;
-        }
-        .produtos-categoria-chip:hover {
-          background: var(--border-light);
-          color: var(--text);
-        }
-        .produtos-categoria-chip.ativo {
-          background: var(--primary);
-          color: white;
-          border-color: var(--primary);
-        }
-        .produtos-categoria-chip.ativo:hover {
-          background: var(--primary-hover);
-          color: white;
-        }
 
         /* ===== Seções por categoria (estilo Kalunga) ===== */
         .produtos-secao {

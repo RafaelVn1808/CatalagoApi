@@ -5,7 +5,6 @@ import {
   Filter,
   MessageCircle,
   Package,
-  ChevronDown,
   X,
 } from 'lucide-react'
 import { produtosApi } from '@/api/produtos'

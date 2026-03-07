@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, NavLink, Link, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Menu,
@@ -7,13 +7,11 @@ import {
   MapPin,
   Clock,
   Phone,
-  ArrowRight,
 } from 'lucide-react'
 
 export default function Layout() {
   const { user, logout } = useAuth()
   const [menuAberto, setMenuAberto] = useState(false)
-  const location = useLocation()
 
   const fecharMenu = () => setMenuAberto(false)
 
